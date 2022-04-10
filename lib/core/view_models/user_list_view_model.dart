@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -19,10 +20,25 @@ class UserListViewModel extends ViewModel {
   final UserManager _userManager;
 
   final ValueNotifier<List<UserEntity>> users = ValueNotifier([]);
+  final ValueNotifier<bool?> connectStatus = ValueNotifier(null);
+
+  late StreamSubscription subscription;
 
   @override
   Future<void> onInitialize([Object? parameter]) async {
-    await _tryGetUsers();
+    subscription = Connectivity().onConnectivityChanged.listen((result) async {
+      print(result);
+      if (result == ConnectivityResult.none) {
+        connectStatus.value = false;
+      } else {
+        connectStatus.value = true;
+        await _tryGetUsers();
+      }
+    });
+  }
+
+  void onDispose() {
+    subscription.cancel();
   }
 
   Future<void> onNavigateToUserDetails(UserEntity user) {
@@ -30,22 +46,10 @@ class UserListViewModel extends ViewModel {
   }
 
   Future<void> _tryGetUsers() async {
-    final ConnectivityResult connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      await _dialogService.alert('Please check your internet connection');
-    } else {
-      try {
-        final result = await InternetAddress.lookup('google.com');
-        if (result.isNotEmpty) {
-          _dialogService.showLoading();
+    _dialogService.showLoading();
 
-          users.value = await _userManager.getUsers();
+    users.value = await _userManager.getUsers();
 
-          await _dialogService.dismiss();
-        }
-      } catch (exc) {
-        await _dialogService.alert('Please check your internet connection');
-      }
-    }
+    await _dialogService.dismiss();
   }
 }

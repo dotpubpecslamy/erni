@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_tech_exam/core/view_models/base/view_model.dart';
 import 'package:flutter_tech_exam/domain/entities/user_entity.dart';
-import 'package:flutter_tech_exam/web/contracts/user_contract.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
